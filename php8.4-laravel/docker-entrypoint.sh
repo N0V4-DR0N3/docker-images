@@ -64,7 +64,7 @@ if [ -f "composer.json" ]; then
         fi
     fi
     
-    # Executar cache de configuração em produção
+    # Executar cache de configuração em produção (se APP_ENV=production)
     if [ "$APP_ENV" = "production" ] && [ -f "artisan" ]; then
         log_info "Otimizando para produção..."
         php artisan config:cache 2>/dev/null || true
