@@ -73,7 +73,7 @@ services:
 
 | Variável | Padrão | Descrição |
 |----------|--------|-----------|
-| `APP_ENV` | production | Ambiente da aplicação |
+| `APP_ENV` | - | Ambiente da aplicação (define no .env ou via -e) |
 | `SERVER_NAME` | :80 :443 | Endereços que o servidor deve escutar |
 | `OCTANE_HOST` | 0.0.0.0 | IP que o Octane deve escutar |
 | `OCTANE_PORT` | 80 | Porta do Octane |

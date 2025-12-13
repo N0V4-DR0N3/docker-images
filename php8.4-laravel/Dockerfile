@@ -22,7 +22,6 @@ ENV UID=${UID} \
     # Configurações do FrankenPHP/Octane
     SERVER_NAME=":80 :443" \
     FRANKENPHP_CONFIG="worker ./public/index.php" \
-    APP_ENV=production \
     # Configurações de locale e timezone
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
