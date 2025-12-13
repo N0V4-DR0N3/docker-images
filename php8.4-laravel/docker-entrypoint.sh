@@ -80,6 +80,23 @@ fi
 if [ $# -gt 0 ]; then
     exec "$@"
 else
-    log_info "Iniciando FrankenPHP com Octane..."
-    exec frankenphp run --config /etc/caddy/Caddyfile
+    # Se Octane está instalado e habilitado, usar octane:frankenphp
+    if [ -f "artisan" ] && composer show laravel/octane > /dev/null 2>&1; then
+        log_info "Iniciando Laravel Octane com FrankenPHP..."
+        
+        # Configurações via variáveis de ambiente
+        OCTANE_HOST="${OCTANE_HOST:-0.0.0.0}"
+        OCTANE_PORT="${OCTANE_PORT:-80}"
+        OCTANE_WORKERS="${OCTANE_WORKERS:-auto}"
+        OCTANE_MAX_REQUESTS="${OCTANE_MAX_REQUESTS:-500}"
+        
+        exec php artisan octane:frankenphp \
+            --host="$OCTANE_HOST" \
+            --port="$OCTANE_PORT" \
+            --workers="$OCTANE_WORKERS" \
+            --max-requests="$OCTANE_MAX_REQUESTS"
+    else
+        log_info "Iniciando FrankenPHP (modo classic)..."
+        exec frankenphp run --config /etc/caddy/Caddyfile
+    fi
 fi
