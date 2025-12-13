@@ -112,6 +112,10 @@ bcmath, exif, gd, gettext, intl, opcache, pcntl, pdo_mysql, pdo_pgsql, zip, imag
 - **FrankenPHP**: Não existe tag `latest-php8.4-alpine`, usar `php8.4`
 - **Composer**: Precisa de `proc_open` habilitado no php.ini
 - **Network**: Usar `--network=host` no build se houver timeout
+- **Laravel Octane**: Usar `php artisan octane:frankenphp` em vez de `frankenphp run` com Caddyfile worker
+- **Entrypoint + CMD**: Não usar CMD com argumentos quando o entrypoint precisa decidir o que executar (CMD é passado como $@ ao entrypoint)
+- **FrankenPHP num_threads**: Configurado via `octane:frankenphp --workers=N`, não no Caddyfile
+- **Variáveis Octane**: OCTANE_HOST, OCTANE_PORT, OCTANE_WORKERS, OCTANE_MAX_REQUESTS
 
 ## 💡 Exemplos de Uso
 

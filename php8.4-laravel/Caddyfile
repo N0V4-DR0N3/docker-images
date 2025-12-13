@@ -1,14 +1,12 @@
 # =============================================================================
-# Caddyfile para Laravel Octane + FrankenPHP
+# Caddyfile para Laravel + FrankenPHP (modo classic/fallback)
+# =============================================================================
+# Este Caddyfile é usado quando o Laravel Octane NÃO está instalado.
+# Quando Octane está instalado, o entrypoint usa `php artisan octane:frankenphp`
+# que gerencia sua própria configuração do servidor.
 # =============================================================================
 
 {
-    # Configurações globais
-    frankenphp {
-        # Número de workers (ajuste conforme recursos disponíveis)
-        num_threads {$FRANKENPHP_NUM_THREADS:auto}
-    }
-    
     # Desabilitar admin API em produção
     admin off
     
@@ -49,17 +47,8 @@
     # Servir arquivos estáticos
     file_server
     
-    # Roteamento Laravel - Octane worker mode
-    php {
-        # Usar worker mode para melhor performance
-        worker /app/public/index.php {
-            # Número de requests antes de reiniciar o worker
-            num {$FRANKENPHP_MAX_REQUESTS:500}
-            
-            # Ambiente de watch em desenvolvimento
-            # watch /app/**/*.php
-        }
-    }
+    # Roteamento Laravel
+    php_server
     
     # Logs de acesso
     log {

@@ -112,8 +112,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Usar usuário não-root
 USER php
 
-# Entrypoint para instalar Octane automaticamente
+# Entrypoint para instalar Octane automaticamente e iniciar o servidor
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
-# Comando padrão - FrankenPHP com Octane worker mode
-CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]
+# Sem CMD - o entrypoint decide se usa octane:frankenphp ou frankenphp run

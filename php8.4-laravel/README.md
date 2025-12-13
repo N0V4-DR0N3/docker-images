@@ -72,13 +72,25 @@ services:
 | Variável | Padrão | Descrição |
 |----------|--------|-----------|
 | `APP_ENV` | production | Ambiente da aplicação |
-| `SERVER_NAME` | :80 :443 | Portas do servidor |
+| `OCTANE_HOST` | 0.0.0.0 | IP que o servidor deve escutar |
+| `OCTANE_PORT` | 80 | Porta do servidor |
+| `OCTANE_WORKERS` | auto | Número de workers (auto = 2x CPUs) |
+| `OCTANE_MAX_REQUESTS` | 500 | Requests antes de reiniciar worker |
 | `PHP_MEMORY_LIMIT` | 512M | Limite de memória PHP |
 | `PHP_MAX_EXECUTION_TIME` | 300 | Tempo máximo de execução |
 | `PHP_POST_MAX_SIZE` | 500M | Tamanho máximo do POST |
 | `PHP_UPLOAD_MAX_FILESIZE` | 500M | Tamanho máximo de upload |
-| `FRANKENPHP_MAX_REQUESTS` | 500 | Requests antes de reciclar worker |
-| `FRANKENPHP_NUM_THREADS` | auto | Número de threads |
+
+### Exemplo com Configuração Personalizada
+
+```bash
+docker run -d \
+  -p 80:80 \
+  -v $(pwd):/app \
+  -e OCTANE_WORKERS=8 \
+  -e OCTANE_MAX_REQUESTS=1000 \
+  websolusoficial/php:8.4-laravel
+```
 
 ## 🔒 Segurança
 
