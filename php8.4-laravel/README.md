@@ -69,17 +69,34 @@ services:
 
 ## ⚙️ Variáveis de Ambiente
 
+### Aplicação e Servidor
+
 | Variável | Padrão | Descrição |
 |----------|--------|-----------|
 | `APP_ENV` | production | Ambiente da aplicação |
-| `OCTANE_HOST` | 0.0.0.0 | IP que o servidor deve escutar |
-| `OCTANE_PORT` | 80 | Porta do servidor |
+| `SERVER_NAME` | :80 :443 | Endereços que o servidor deve escutar |
+| `OCTANE_HOST` | 0.0.0.0 | IP que o Octane deve escutar |
+| `OCTANE_PORT` | 80 | Porta do Octane |
 | `OCTANE_WORKERS` | auto | Número de workers (auto = 2x CPUs) |
 | `OCTANE_MAX_REQUESTS` | 500 | Requests antes de reiniciar worker |
+
+### Configurações PHP
+
+| Variável | Padrão | Descrição |
+|----------|--------|-----------|
 | `PHP_MEMORY_LIMIT` | 512M | Limite de memória PHP |
-| `PHP_MAX_EXECUTION_TIME` | 300 | Tempo máximo de execução |
+| `PHP_MAX_EXECUTION_TIME` | 300 | Tempo máximo de execução (segundos) |
 | `PHP_POST_MAX_SIZE` | 500M | Tamanho máximo do POST |
 | `PHP_UPLOAD_MAX_FILESIZE` | 500M | Tamanho máximo de upload |
+
+### Locale
+
+| Variável | Padrão | Descrição |
+|----------|--------|-----------|
+| `LANG` | en_US.UTF-8 | Locale do sistema |
+| `LANGUAGE` | en_US:en | Configuração de idioma |
+| `LC_ALL` | en_US.UTF-8 | Locale para todas as categorias |
+| `TZ` | UTC | Timezone do container |
 
 ### Exemplo com Configuração Personalizada
 
@@ -87,8 +104,12 @@ services:
 docker run -d \
   -p 80:80 \
   -v $(pwd):/app \
+  -e APP_ENV=production \
   -e OCTANE_WORKERS=8 \
   -e OCTANE_MAX_REQUESTS=1000 \
+  -e PHP_MEMORY_LIMIT=1G \
+  -e PHP_UPLOAD_MAX_FILESIZE=100M \
+  -e TZ=America/Sao_Paulo \
   websolusoficial/php:8.4-laravel
 ```
 

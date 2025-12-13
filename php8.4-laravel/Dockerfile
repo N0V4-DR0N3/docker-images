@@ -23,11 +23,12 @@ ENV UID=${UID} \
     SERVER_NAME=":80 :443" \
     FRANKENPHP_CONFIG="worker ./public/index.php" \
     APP_ENV=production \
-    # Configurações de locale
+    # Configurações de locale e timezone
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8 \
-    # Configurações do PHP
+    TZ=UTC \
+    # Configurações do PHP (podem ser sobrescritas com -e)
     PHP_MEMORY_LIMIT=512M \
     PHP_MAX_EXECUTION_TIME=300 \
     PHP_POST_MAX_SIZE=500M \
