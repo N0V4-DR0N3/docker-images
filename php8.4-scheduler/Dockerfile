@@ -19,10 +19,11 @@ LABEL type="scheduler"
 
 ENV UID=${UID} \
     GID=${GID} \
-    # Configurações de locale
+    # Configurações de locale e timezone
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8 \
+    TZ=UTC \
     # Configurações do PHP
     PHP_MEMORY_LIMIT=256M \
     PHP_MAX_EXECUTION_TIME=0

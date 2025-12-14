@@ -71,6 +71,7 @@ services:
 | `WORKER_MEMORY` | 128 | Limite de memória em MB |
 | `WORKER_NUMPROCS` | 2 | Número de processos worker |
 | `PHP_MEMORY_LIMIT` | 256M | Limite de memória PHP |
+| `TZ` | UTC | Timezone do container e PHP |
 
 ## 📋 Exemplo: Múltiplas Filas
 

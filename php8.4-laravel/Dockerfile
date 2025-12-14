@@ -31,7 +31,9 @@ ENV UID=${UID} \
     PHP_MEMORY_LIMIT=512M \
     PHP_MAX_EXECUTION_TIME=300 \
     PHP_POST_MAX_SIZE=500M \
-    PHP_UPLOAD_MAX_FILESIZE=500M
+    PHP_UPLOAD_MAX_FILESIZE=500M \
+    # Octane Watch (desenvolvimento) - requer: npm install --save-dev chokidar
+    OCTANE_WATCH=false
 
 # Instalar dependências do sistema em uma única camada
 RUN apt-get update && apt-get install -yqq --no-install-recommends \
@@ -47,6 +49,8 @@ RUN apt-get update && apt-get install -yqq --no-install-recommends \
     libpq-dev \
     libmagickwand-dev \
     locales \
+    nodejs \
+    npm \
     unzip \
     zip \
     zlib1g-dev \

@@ -79,6 +79,7 @@ services:
 | `OCTANE_PORT` | 80 | Porta do Octane |
 | `OCTANE_WORKERS` | auto | Número de workers (auto = 2x CPUs) |
 | `OCTANE_MAX_REQUESTS` | 500 | Requests antes de reiniciar worker |
+| `OCTANE_WATCH` | false | Hot-reload em desenvolvimento (requer chokidar) |
 
 ### Configurações PHP
 
@@ -113,7 +114,25 @@ docker run -d \
   websolusoficial/php:8.4-laravel
 ```
 
-## 🔒 Segurança
+## �️ Modo Desenvolvimento (Hot Reload)
+
+Para habilitar o hot-reload durante o desenvolvimento, use a variável `OCTANE_WATCH`:
+
+```bash
+docker run -d \
+  -p 80:80 \
+  -v $(pwd):/app \
+  -e OCTANE_WATCH=true \
+  websolusoficial/php:8.4-laravel
+```
+
+O entrypoint instala automaticamente o `chokidar` se necessário. Você também pode instalar manualmente no projeto:
+
+```bash
+npm install --save-dev chokidar
+```
+
+## �🔒 Segurança
 
 - Executa como usuário `php` (não-root)
 - Headers de segurança configurados

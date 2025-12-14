@@ -89,12 +89,25 @@ else
         OCTANE_PORT="${OCTANE_PORT:-80}"
         OCTANE_WORKERS="${OCTANE_WORKERS:-auto}"
         OCTANE_MAX_REQUESTS="${OCTANE_MAX_REQUESTS:-500}"
+        OCTANE_WATCH="${OCTANE_WATCH:-false}"
         
-        exec php artisan octane:frankenphp \
-            --host="$OCTANE_HOST" \
-            --port="$OCTANE_PORT" \
-            --workers="$OCTANE_WORKERS" \
-            --max-requests="$OCTANE_MAX_REQUESTS"
+        # Construir argumentos do Octane
+        OCTANE_ARGS="--host=$OCTANE_HOST --port=$OCTANE_PORT --workers=$OCTANE_WORKERS --max-requests=$OCTANE_MAX_REQUESTS"
+        
+        # Adicionar --watch se habilitado (desenvolvimento)
+        if [ "$OCTANE_WATCH" = "true" ] || [ "$OCTANE_WATCH" = "1" ]; then
+            log_info "Modo WATCH habilitado (hot-reload)"
+            
+            # Verificar se chokidar está instalado
+            if [ ! -d "node_modules/chokidar" ]; then
+                log_warn "chokidar não encontrado. Instalando..."
+                npm install --save-dev chokidar 2>/dev/null || log_error "Falha ao instalar chokidar"
+            fi
+            
+            OCTANE_ARGS="$OCTANE_ARGS --watch"
+        fi
+        
+        exec php artisan octane:frankenphp $OCTANE_ARGS
     else
         log_info "Iniciando FrankenPHP (modo classic)..."
         exec frankenphp run --config /etc/caddy/Caddyfile

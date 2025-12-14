@@ -56,6 +56,7 @@ services:
 | Variável | Padrão | Descrição |
 |----------|--------|-----------|
 | `PHP_MEMORY_LIMIT` | 256M | Limite de memória PHP |
+| `TZ` | UTC | Timezone do container e PHP |
 
 ## 📋 Configuração Laravel
 
