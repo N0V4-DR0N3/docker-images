@@ -6,7 +6,8 @@
 # 1. Verifica se existe um projeto Laravel
 # 2. Instala o laravel/octane se não estiver instalado
 # 3. Configura o Octane para FrankenPHP
-# 4. Inicia o servidor FrankenPHP
+# 4. Garante que chokidar esteja instalado para watch mode
+# 5. Inicia o servidor FrankenPHP com Octane
 # =============================================================================
 
 set -e
@@ -56,6 +57,17 @@ if [ -f "composer.json" ]; then
         log_info "laravel/octane já está instalado"
     fi
     
+    # Garantir que chokidar esteja instalado para o watch mode
+    if [ -f "package.json" ]; then
+        if ! grep -q "chokidar" package.json 2>/dev/null; then
+            log_info "Instalando chokidar para watch mode..."
+            npm install --save-dev chokidar 2>/dev/null || log_warn "Falha ao instalar chokidar"
+        elif [ ! -d "node_modules/chokidar" ]; then
+            log_info "Instalando dependências Node.js..."
+            npm install 2>/dev/null || log_warn "Falha ao instalar dependências"
+        fi
+    fi
+    
     # Gerar chave da aplicação se não existir
     if [ -f ".env" ] && [ -f "artisan" ]; then
         if ! grep -q "^APP_KEY=base64:" .env 2>/dev/null; then
@@ -70,6 +82,10 @@ if [ -f "composer.json" ]; then
         php artisan config:cache 2>/dev/null || true
         php artisan route:cache 2>/dev/null || true
         php artisan view:cache 2>/dev/null || true
+        
+        # Desabilitar watch em produção
+        export OCTANE_WATCH=false
+        log_warn "Watch mode desabilitado em produção"
     fi
 else
     log_warn "Nenhum projeto Laravel encontrado em /app"
@@ -80,31 +96,29 @@ fi
 if [ $# -gt 0 ]; then
     exec "$@"
 else
-    # Se Octane está instalado e habilitado, usar octane:frankenphp
+    # Se Octane está instalado, usar octane:frankenphp
     if [ -f "artisan" ] && composer show laravel/octane > /dev/null 2>&1; then
         log_info "Iniciando Laravel Octane com FrankenPHP..."
         
-        # Configurações via variáveis de ambiente
+        # Configurações via variáveis de ambiente (com defaults)
         OCTANE_HOST="${OCTANE_HOST:-0.0.0.0}"
         OCTANE_PORT="${OCTANE_PORT:-80}"
         OCTANE_WORKERS="${OCTANE_WORKERS:-auto}"
         OCTANE_MAX_REQUESTS="${OCTANE_MAX_REQUESTS:-500}"
-        OCTANE_WATCH="${OCTANE_WATCH:-false}"
+        OCTANE_WATCH="${OCTANE_WATCH:-true}"
         
         # Construir argumentos do Octane
         OCTANE_ARGS="--host=$OCTANE_HOST --port=$OCTANE_PORT --workers=$OCTANE_WORKERS --max-requests=$OCTANE_MAX_REQUESTS"
         
-        # Adicionar --watch se habilitado (desenvolvimento)
+        # Adicionar --watch se habilitado
         if [ "$OCTANE_WATCH" = "true" ] || [ "$OCTANE_WATCH" = "1" ]; then
-            log_info "Modo WATCH habilitado (hot-reload)"
-            
-            # Verificar se chokidar está instalado
-            if [ ! -d "node_modules/chokidar" ]; then
-                log_warn "chokidar não encontrado. Instalando..."
-                npm install --save-dev chokidar 2>/dev/null || log_error "Falha ao instalar chokidar"
-            fi
-            
+            log_info "✓ Modo WATCH habilitado (hot-reload automático)"
             OCTANE_ARGS="$OCTANE_ARGS --watch"
+        fi
+        
+        # Adicionar --log-level se definido
+        if [ -n "$OCTANE_LOG_LEVEL" ]; then
+            OCTANE_ARGS="$OCTANE_ARGS --log-level=$OCTANE_LOG_LEVEL"
         fi
         
         exec php artisan octane:frankenphp $OCTANE_ARGS
