@@ -19,9 +19,6 @@ LABEL frankenphp.version="latest"
 
 ENV UID=${UID} \
     GID=${GID} \
-    # Configurações do FrankenPHP/Octane
-    SERVER_NAME=":80 :443" \
-    FRANKENPHP_CONFIG="worker ./public/index.php" \
     # Configurações de locale e timezone
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
@@ -32,8 +29,16 @@ ENV UID=${UID} \
     PHP_MAX_EXECUTION_TIME=300 \
     PHP_POST_MAX_SIZE=500M \
     PHP_UPLOAD_MAX_FILESIZE=500M \
-    # Octane Watch (desenvolvimento) - requer: npm install --save-dev chokidar
-    OCTANE_WATCH=false
+    # Configurações do Octane
+    OCTANE_HOST=0.0.0.0 \
+    OCTANE_PORT=80 \
+    OCTANE_WORKERS=auto \
+    OCTANE_MAX_REQUESTS=500 \
+    OCTANE_WATCH=true \
+    # Configurações do Caddy/FrankenPHP
+    SERVER_NAME=":80 :443" \
+    XDG_CONFIG_HOME=/var/www/html/config \
+    XDG_DATA_HOME=/var/www/html/data
 
 # Instalar dependências do sistema em uma única camada
 RUN apt-get update && apt-get install -yqq --no-install-recommends \
@@ -106,8 +111,8 @@ RUN mkdir -p /app \
 # Configurar diretório de trabalho
 WORKDIR /app
 
-# Expor portas HTTP e HTTPS
-EXPOSE 80 443
+# Expor portas HTTP, HTTPS e HTTP/3 (UDP)
+EXPOSE 80 443 443/udp
 
 # Healthcheck para monitoramento
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
@@ -119,4 +124,5 @@ USER php
 # Entrypoint para instalar Octane automaticamente e iniciar o servidor
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
-# Sem CMD - o entrypoint decide se usa octane:frankenphp ou frankenphp run
+# Comando padrão: Laravel Octane com FrankenPHP
+CMD ["php", "artisan", "octane:frankenphp"]

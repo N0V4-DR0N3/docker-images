@@ -5,10 +5,11 @@ Imagem Docker otimizada para rodar **Laravel** com **Octane** usando **FrankenPH
 ## 🚀 Características
 
 - **PHP 8.4** com extensões essenciais para Laravel
-- **FrankenPHP** - Servidor de aplicação PHP de alta performance
+- **FrankenPHP** - Servidor de aplicação PHP de alta performance baseado em Caddy
 - **Octane Worker Mode** - Workers persistentes para máxima performance
 - **Instalação automática do Octane** - Não precisa instalar no projeto!
-- **HTTP/2 e HTTP/3** - Suporte nativo
+- **Watch Mode ativado por padrão** - Hot-reload automático em desenvolvimento
+- **HTTP/2 e HTTP/3** - Suporte nativo via FrankenPHP
 - **Early Hints** - Melhor performance de carregamento
 - **Debian Trixie** - Base estável
 - **Segurança** - Executa como usuário não-root
@@ -21,10 +22,11 @@ O que o entrypoint faz:
 1. Detecta se existe um projeto Laravel em `/app`
 2. Executa `composer install` se o vendor não existir
 3. Instala `laravel/octane` automaticamente se não estiver no projeto
-4. Configura o Octane para usar FrankenPHP
-5. Gera `APP_KEY` se necessário
-6. Otimiza cache em produção (`config:cache`, `route:cache`, `view:cache`)
-7. Inicia o servidor FrankenPHP
+4. Configura o Octane para usar FrankenPHP (`octane:install --server=frankenphp`)
+5. Instala `chokidar` automaticamente para watch mode
+6. Gera `APP_KEY` se necessário
+7. Otimiza cache em produção (`config:cache`, `route:cache`, `view:cache`)
+8. Inicia o servidor FrankenPHP com Octane
 
 ## 📦 Extensões PHP Incluídas
 
@@ -46,6 +48,7 @@ docker build -t websolusoficial/php:8.4-laravel .
 docker run -d \
   -p 80:80 \
   -p 443:443 \
+  -p 443:443/udp \
   -v $(pwd):/app \
   -e APP_ENV=production \
   websolusoficial/php:8.4-laravel
@@ -60,12 +63,35 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp"  # HTTP/3 (QUIC)
     volumes:
       - .:/app
     environment:
       - APP_ENV=production
-      - FRANKENPHP_MAX_REQUESTS=1000
+      - OCTANE_WORKERS=4
+      - OCTANE_MAX_REQUESTS=500
+      # Watch mode é desabilitado automaticamente em produção
 ```
+
+### Desenvolvimento com Watch Mode
+
+O watch mode está **ativado por padrão** para hot-reload automático:
+
+```yaml
+services:
+  app:
+    image: websolusoficial/php:8.4-laravel
+    ports:
+      - "80:80"
+    volumes:
+      - .:/app
+    environment:
+      - APP_ENV=local
+      - OCTANE_WATCH=true  # Ativado por padrão
+      - OCTANE_WORKERS=1   # Use 1 worker em desenvolvimento
+```
+
+**Nota:** O watch mode requer Node.js e `chokidar`, que são instalados automaticamente pelo entrypoint.
 
 ## ⚙️ Variáveis de Ambiente
 
@@ -79,7 +105,8 @@ services:
 | `OCTANE_PORT` | 80 | Porta do Octane |
 | `OCTANE_WORKERS` | auto | Número de workers (auto = 2x CPUs) |
 | `OCTANE_MAX_REQUESTS` | 500 | Requests antes de reiniciar worker |
-| `OCTANE_WATCH` | false | Hot-reload em desenvolvimento (requer chokidar) |
+| `OCTANE_WATCH` | true | Hot-reload em desenvolvimento (auto-desabilitado em produção) |
+| `OCTANE_LOG_LEVEL` | - | Nível de log (error, warning, info, debug) |
 
 ### Configurações PHP
 
