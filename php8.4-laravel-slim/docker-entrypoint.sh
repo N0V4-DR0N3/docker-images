@@ -127,7 +127,9 @@ else
 fi
 
 # Executar comando passado ou iniciar Octane com FrankenPHP
+log_info "Argumentos recebidos: $# ($@)"
 if [ $# -gt 0 ]; then
+    log_warn "Executando comando customizado: $@"
     exec "$@"
 else
     # Octane é instalado automaticamente no início do script
@@ -147,11 +149,25 @@ else
         if [ "$OCTANE_WATCH" = "true" ] || [ "$OCTANE_WATCH" = "1" ]; then
             log_info "✅ Hot-reload ativo (chokidar-cli global)"
             OCTANE_ARGS="$OCTANE_ARGS --watch"
+            
+            # Verificar se chokidar está instalado
+            if ! command -v chokidar &> /dev/null; then
+                log_error "chokidar-cli não encontrado! Instalando..."
+                npm install -g chokidar-cli
+            else
+                log_info "chokidar-cli encontrado: $(which chokidar)"
+            fi
         fi
         
         # Adicionar --log-level se definido
         if [ -n "$OCTANE_LOG_LEVEL" ]; then
             OCTANE_ARGS="$OCTANE_ARGS --log-level=$OCTANE_LOG_LEVEL"
+        fi
+        
+        # Verificar permissões do diretório (importante para watch mode)
+        if [ ! -w "/app" ]; then
+            log_warn "Diretório /app não é gravável! Watch mode pode não funcionar."
+            log_warn "Verifique os volumes montados e permissões."
         fi
         
         log_info "Comando: php artisan octane:frankenphp $OCTANE_ARGS"

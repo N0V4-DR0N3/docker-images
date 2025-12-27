@@ -123,5 +123,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 USER php
 
+# Entrypoint para instalar Octane automaticamente e iniciar o servidor
+# Não usar CMD aqui, pois o entrypoint decide o que executar baseado no ambiente
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["php", "artisan", "octane:frankenphp"]
