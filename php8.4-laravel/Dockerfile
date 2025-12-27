@@ -1,11 +1,12 @@
 # =============================================================================
-# FrankenPHP + Laravel Octane - Imagem Base
+# FrankenPHP + Laravel Octane - Imagem Otimizada
 # =============================================================================
-# Imagem otimizada para rodar Laravel com Octane usando FrankenPHP
+# Imagem ultra-otimizada para rodar Laravel com Octane usando FrankenPHP
 # Oferece performance superior com suporte a HTTP/2, HTTP/3 e Early Hints
+# Tamanho reduzido usando multi-stage build
 # =============================================================================
 
-FROM dunglas/frankenphp:php8.4
+FROM dunglas/frankenphp:php8.4 AS base
 
 # Argumentos para configuração do usuário
 ARG UID=1000
@@ -13,7 +14,7 @@ ARG GID=1000
 
 # Labels de metadados
 LABEL maintainer="WebSolus"
-LABEL description="FrankenPHP + Laravel Octane - Imagem otimizada para produção"
+LABEL description="FrankenPHP + Laravel Octane - Imagem ultra-otimizada"
 LABEL php.version="8.4"
 LABEL frankenphp.version="latest"
 
@@ -29,22 +30,24 @@ ENV UID=${UID} \
     PHP_MAX_EXECUTION_TIME=300 \
     PHP_POST_MAX_SIZE=500M \
     PHP_UPLOAD_MAX_FILESIZE=500M \
-    # Configurações do Octane
+    # Configurações do Octane (configuradas automaticamente pelo entrypoint)
     OCTANE_HOST=0.0.0.0 \
     OCTANE_PORT=80 \
     OCTANE_WORKERS=auto \
     OCTANE_MAX_REQUESTS=500 \
-    OCTANE_WATCH=true \
     # Configurações do Caddy/FrankenPHP
     SERVER_NAME=":80 :443" \
     XDG_CONFIG_HOME=/var/www/html/config \
     XDG_DATA_HOME=/var/www/html/data
 
-# Instalar dependências do sistema em uma única camada
-RUN apt-get update && apt-get install -yqq --no-install-recommends \
-    ca-certificates \
-    curl \
-    git \
+# =============================================================================
+# Stage 1: Builder - Instalação de extensões e dependências
+# =============================================================================
+FROM base AS builder
+
+# Instalar dependências de build (serão removidas na imagem final)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    $PHPIZE_DEPS \
     libicu-dev \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
@@ -53,52 +56,70 @@ RUN apt-get update && apt-get install -yqq --no-install-recommends \
     libonig-dev \
     libpq-dev \
     libmagickwand-dev \
+    zlib1g-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        bcmath \
+        exif \
+        gd \
+        gettext \
+        intl \
+        opcache \
+        pcntl \
+        pdo_mysql \
+        pdo_pgsql \
+        zip \
+    && pecl install imagick mongodb redis \
+    && docker-php-ext-enable imagick mongodb redis \
+    && rm -rf /tmp/pear /var/lib/apt/lists/*
+
+# =============================================================================
+# Stage 2: Runtime - Imagem final otimizada
+# =============================================================================
+FROM base AS runtime
+
+# Copiar extensões compiladas do builder
+COPY --from=builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+
+# Instalar APENAS bibliotecas runtime necessárias (sem headers -dev)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    git \
+    libicu76 \
+    libfreetype6 \
+    libjpeg62-turbo \
+    libpng16-16 \
+    libzip5 \
+    libonig5 \
+    libpq5 \
+    libmagickwand-7.q16-10 \
     locales \
     nodejs \
     npm \
     unzip \
-    zip \
-    zlib1g-dev \
     && sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
     && locale-gen \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
-
-# Configurar e instalar extensões PHP
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-    bcmath \
-    exif \
-    gd \
-    gettext \
-    intl \
-    opcache \
-    pcntl \
-    pdo_mysql \
-    pdo_pgsql \
-    zip
-
-# Instalar extensões PECL
-RUN pecl install imagick mongodb redis \
-    && docker-php-ext-enable \
-    imagick \
-    mongodb \
-    redis
+    && npm install -g chokidar-cli \
+    && npm cache clean --force \
+    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/* /usr/share/man/* \
+    && find /var/log -type f -delete
 
 # Criar usuário não-root para segurança
 RUN groupadd --gid ${GID} --system php \
     && useradd --uid ${UID} --system --gid php --home /home/php --shell /bin/bash php \
-    && mkdir -p /home/php/.composer \
+    && mkdir -p /home/php/.composer /home/php/.npm \
     && chown -R php:php /home/php
 
-# Instalar Composer
+# Instalar Composer e configurar
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_HOME=/home/php/.composer
 
 # Copiar configuração do PHP
 COPY ./php/php.ini /usr/local/etc/php/php.ini
-
-# Copiar Caddyfile para configuração do FrankenPHP
-COPY ./Caddyfile /etc/caddy/Caddyfile
 
 # Copiar script de entrypoint
 COPY ./docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

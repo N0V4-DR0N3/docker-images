@@ -1,0 +1,70 @@
+# =============================================================================
+# .dockerignore - Otimiza o contexto de build do Docker
+# =============================================================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Dependências (serão instaladas no container)
+vendor/
+node_modules/
+
+# Cache e arquivos temporários
+bootstrap/cache/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/testing/*
+storage/framework/views/*
+storage/logs/*
+.phpunit.cache
+.php_cs.cache
+.php-cs-fixer.cache
+
+# Testes
+tests/
+phpunit.xml
+phpunit.xml.dist
+.phpunit.result.cache
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentação
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+LICENSE
+docs/
+
+# Docker
+docker-compose*.yml
+Dockerfile
+.dockerignore
+
+# Build artifacts
+dist/
+build/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Outros
+*.log
+*.pid
+*.seed
+*.sql
+*.sqlite

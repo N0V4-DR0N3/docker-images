@@ -1,12 +1,15 @@
 name: Build and Push Docker Images
 
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
       - main
       - master
     paths:
       - 'php8.4-laravel/**'
+      - 'php8.4-laravel-slim/**'
       - 'php8.4-scheduler/**'
       - 'php8.4-worker/**'
       - 'php8.4-apache/**'
@@ -14,10 +17,6 @@ on:
       - 'php8.4-puppeteer/**'
       - 'laravel-php8.3/**'
       - '.github/workflows/docker-publish.yml'
-  pull_request:
-    branches:
-      - main
-      - master
   workflow_dispatch:
     inputs:
       image:
@@ -28,6 +27,7 @@ on:
         options:
           - ''
           - 'php8.4-laravel'
+          - 'php8.4-laravel-slim'
           - 'php8.4-scheduler'
           - 'php8.4-worker'
           - 'php8.4-apache'
@@ -44,9 +44,11 @@ jobs:
   # Detectar quais imagens mudaram
   # =============================================================================
   changes:
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     outputs:
       php84-laravel: ${{ steps.filter.outputs.php84-laravel }}
+      php84-laravel-slim: ${{ steps.filter.outputs.php84-laravel-slim }}
       php84-scheduler: ${{ steps.filter.outputs.php84-scheduler }}
       php84-worker: ${{ steps.filter.outputs.php84-worker }}
       php84-apache: ${{ steps.filter.outputs.php84-apache }}
@@ -62,6 +64,8 @@ jobs:
           filters: |
             php84-laravel:
               - 'php8.4-laravel/**'
+            php84-laravel-slim:
+              - 'php8.4-laravel-slim/**'
             php84-scheduler:
               - 'php8.4-scheduler/**'
             php84-worker:
@@ -111,6 +115,48 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./php8.4-laravel
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # =============================================================================
+  # FrankenPHP - Laravel SLIM (Otimizado)
+  # =============================================================================
+  build-php84-laravel-slim:
+    needs: changes
+    if: |
+      needs.changes.outputs.php84-laravel-slim == 'true' || 
+      github.event_name == 'workflow_dispatch' && (github.event.inputs.image == 'php8.4-laravel-slim' || github.event.inputs.image == '')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_PREFIX }}/php
+          tags: |
+            type=raw,value=8.4-laravel-slim
+            type=raw,value=8.4-laravel-slim-{{sha}}
+            type=raw,value=8.4-octane-slim
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./php8.4-laravel-slim
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

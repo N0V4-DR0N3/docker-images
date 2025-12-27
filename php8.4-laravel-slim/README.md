@@ -1,6 +1,8 @@
-# PHP 8.4 + FrankenPHP (Laravel Octane)
+# PHP 8.4 + FrankenPHP (Laravel Octane) - SLIM
 
-Imagem Docker otimizada para rodar **Laravel** com **Octane** usando **FrankenPHP**.
+Imagem Docker **ultra-otimizada** para rodar **Laravel** com **Octane** usando **FrankenPHP**.
+
+**Esta é a versão SLIM** - ~100MB menor que a versão completa, sem extensões opcionais (imagick, mongodb, gettext).
 
 ## 🚀 Características
 
@@ -15,7 +17,7 @@ Imagem Docker otimizada para rodar **Laravel** com **Octane** usando **FrankenPH
 - **Debian Trixie** - Base estável
 - **Segurança** - Executa como usuário não-root
 
-> **Versão Slim disponível:** Para uma imagem ~100MB menor sem imagick e mongodb, use `php8.4-laravel-slim/`
+> **Versão Slim disponível:** Para uma imagem ~100MB menor sem imagick e mongodb, use `php8.4-laravel-slim-slim/`
 
 ## ✨ Instalação Automática do Octane
 
@@ -39,18 +41,24 @@ O `chokidar-cli` já está **instalado globalmente** na imagem!
 
 ## 📦 Extensões PHP Incluídas
 
-- bcmath, exif, gd, gettext, intl
+**Versão Slim - Otimizada:**
+- bcmath, exif, gd, intl
 - opcache, pcntl, pdo_mysql, pdo_pgsql
-- zip, imagick, mongodb, redis
+- zip, redis
 
-> **Nota:** Para uma versão sem imagick/mongodb (~100MB menor), veja [php8.4-laravel-slim](../php8.4-laravel-slim/)
+**Extensões removidas** (disponíveis na versão completa):
+- ❌ imagick (economia: ~50MB)
+- ❌ mongodb (economia: ~30MB)
+- ❌ gettext (economia: ~5MB)
+
+> **Versão completa disponível:** Para todas extensões, use [php8.4-laravel](../php8.4-laravel/)
 
 ## 🔧 Uso
 
 ### Build
 
 ```bash
-docker build -t websolusoficial/php:8.4-laravel .
+docker build -t websolusoficial/php:8.4-laravel-slim .
 ```
 
 ### Run
@@ -62,7 +70,7 @@ docker run -d \
   -p 443:443/udp \
   -v $(pwd):/app \
   -e APP_ENV=production \
-  websolusoficial/php:8.4-laravel
+  websolusoficial/php:8.4-laravel-slim
 ```
 
 ### Docker Compose
@@ -70,7 +78,7 @@ docker run -d \
 ```yaml
 services:
   app:
-    image: websolusoficial/php:8.4-laravel
+    image: websolusoficial/php:8.4-laravel-slim
     ports:
       - "80:80"
       - "443:443"
@@ -91,7 +99,7 @@ O watch mode é **configurado automaticamente**:
 ```yaml
 services:
   app:
-    image: websolusoficial/php:8.4-laravel
+    image: websolusoficial/php:8.4-laravel-slim
     ports:
       - "80:80"
     volumes:
@@ -118,7 +126,7 @@ environment:
 ```yaml
 services:
   app:
-    image: websolusoficial/php:8.4-laravel
+    image: websolusoficial/php:8.4-laravel-slim
     ports:
       - "80:80"
       - "443:443"
@@ -138,7 +146,7 @@ services:
 ```yaml
 services:
   app:
-    image: websolusoficial/php:8.4-laravel
+    image: websolusoficial/php:8.4-laravel-slim
     ports:
       - "80:80"
     volumes:
@@ -205,7 +213,7 @@ docker run -d \
   -e PHP_MEMORY_LIMIT=1G \
   -e PHP_UPLOAD_MAX_FILESIZE=100M \
   -e TZ=America/Sao_Paulo \
-  websolusoficial/php:8.4-laravel
+  websolusoficial/php:8.4-laravel-slim
 ```
 
 ## �️ Modo Desenvolvimento (Hot Reload)
@@ -217,7 +225,7 @@ docker run -d \
   -p 80:80 \
   -v $(pwd):/app \
   -e OCTANE_WATCH=true \
-  websolusoficial/php:8.4-laravel
+  websolusoficial/php:8.4-laravel-slim
 ```
 
 O entrypoint instala automaticamente o `chokidar` se necessário. Você também pode instalar manualmente no projeto:
@@ -240,7 +248,7 @@ npm install --save-dev chokidar
 Basta montar seu projeto Laravel e iniciar o container:
 
 ```bash
-docker run -d -p 80:80 -v $(pwd):/app websolusoficial/php:8.4-laravel
+docker run -d -p 80:80 -v $(pwd):/app websolusoficial/php:8.4-laravel-slim
 ```
 
 ### Opcional: Instalar manualmente
