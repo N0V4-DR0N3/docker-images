@@ -1,0 +1,164 @@
+# =============================================================================
+# Docker Compose - Laravel + FrankenPHP + Octane
+# =============================================================================
+# Exemplo de configuração para desenvolvimento e produção
+# Copie este arquivo para docker-compose.yml e ajuste conforme necessário
+# =============================================================================
+
+services:
+  # ==========================================================================
+  # Laravel Application com FrankenPHP + Octane
+  # ==========================================================================
+  app:
+    build:
+      context: .
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    image: websolusoficial/php:8.4-laravel
+    container_name: laravel-app
+    restart: unless-stopped
+    
+    # Portas
+    ports:
+      - "${APP_PORT:-80}:80"
+      - "${APP_PORT_SSL:-443}:443"
+      - "443:443/udp"  # HTTP/3 (QUIC)
+    
+    # Volumes
+    volumes:
+      - .:/app
+      # Cache de dependências (opcional, melhora performance)
+      - composer-cache:/home/php/.composer
+      - npm-cache:/home/php/.npm
+    
+    # Variáveis de ambiente
+    environment:
+      # Laravel
+      - APP_ENV=${APP_ENV:-local}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      
+      # Octane
+      - OCTANE_HOST=0.0.0.0
+      - OCTANE_PORT=80
+      - OCTANE_WORKERS=${OCTANE_WORKERS:-auto}
+      - OCTANE_MAX_REQUESTS=${OCTANE_MAX_REQUESTS:-500}
+      - OCTANE_WATCH=${OCTANE_WATCH:-true}
+      - OCTANE_LOG_LEVEL=${OCTANE_LOG_LEVEL:-info}
+      
+      # PHP
+      - PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-512M}
+      - PHP_MAX_EXECUTION_TIME=${PHP_MAX_EXECUTION_TIME:-300}
+      - PHP_POST_MAX_SIZE=${PHP_POST_MAX_SIZE:-500M}
+      - PHP_UPLOAD_MAX_FILESIZE=${PHP_UPLOAD_MAX_FILESIZE:-500M}
+      
+      # Timezone
+      - TZ=${TZ:-UTC}
+    
+    # Rede
+    networks:
+      - laravel
+    
+    # Dependências (descomente se usar outros serviços)
+    # depends_on:
+    #   - mysql
+    #   - redis
+    
+    # Healthcheck
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/up"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # ==========================================================================
+  # MySQL Database (opcional)
+  # ==========================================================================
+  # mysql:
+  #   image: mysql:8.4
+  #   container_name: laravel-mysql
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${DB_PORT:-3306}:3306"
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-secret}
+  #     - MYSQL_DATABASE=${DB_DATABASE:-laravel}
+  #     - MYSQL_USER=${DB_USERNAME:-laravel}
+  #     - MYSQL_PASSWORD=${DB_PASSWORD:-secret}
+  #   volumes:
+  #     - mysql-data:/var/lib/mysql
+  #   networks:
+  #     - laravel
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # ==========================================================================
+  # Redis Cache (opcional)
+  # ==========================================================================
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: laravel-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${REDIS_PORT:-6379}:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - laravel
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # ==========================================================================
+  # PostgreSQL Database (alternativa ao MySQL)
+  # ==========================================================================
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: laravel-postgres
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${DB_PORT:-5432}:5432"
+  #   environment:
+  #     - POSTGRES_DB=${DB_DATABASE:-laravel}
+  #     - POSTGRES_USER=${DB_USERNAME:-laravel}
+  #     - POSTGRES_PASSWORD=${DB_PASSWORD:-secret}
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   networks:
+  #     - laravel
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-laravel}"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  laravel:
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  # Cache volumes (melhoram performance)
+  composer-cache:
+    driver: local
+  npm-cache:
+    driver: local
+  
+  # Dados persistentes (descomente se usar bancos de dados)
+  # mysql-data:
+  #   driver: local
+  # postgres-data:
+  #   driver: local
+  # redis-data:
+  #   driver: local
