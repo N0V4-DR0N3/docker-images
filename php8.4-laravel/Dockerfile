@@ -87,14 +87,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     git \
-    libicu72 \
+    libicu76 \
     libfreetype6 \
     libjpeg62-turbo \
     libpng16-16 \
-    libzip4 \
+    libzip5 \
     libonig5 \
     libpq5 \
-    libmagickwand-6.q16-6 \
+    libmagickwand-7.q16-10 \
     locales \
     nodejs \
     npm \

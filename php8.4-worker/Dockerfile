@@ -5,7 +5,7 @@
 # Processa jobs, events, listeners e broadcasts
 # =============================================================================
 
-FROM dunglas/frankenphp:php8.4
+FROM dunglas/frankenphp:php8.4 AS base
 
 # Argumentos para configuração do usuário
 ARG UID=1000
@@ -37,11 +37,14 @@ ENV UID=${UID} \
     WORKER_MEMORY=128 \
     WORKER_NUMPROCS=2
 
-# Instalar dependências do sistema em uma única camada
-RUN apt-get update && apt-get install -yqq --no-install-recommends \
-    ca-certificates \
-    curl \
-    git \
+# =============================================================================
+# Stage 1: Builder - Instalação de extensões
+# =============================================================================
+FROM base AS builder
+
+# Instalar dependências de build (serão removidas na imagem final)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    $PHPIZE_DEPS \
     libicu-dev \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
@@ -50,36 +53,53 @@ RUN apt-get update && apt-get install -yqq --no-install-recommends \
     libonig-dev \
     libpq-dev \
     libmagickwand-dev \
+    zlib1g-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        bcmath \
+        exif \
+        gd \
+        gettext \
+        intl \
+        opcache \
+        pcntl \
+        pdo_mysql \
+        pdo_pgsql \
+        zip \
+    && pecl install imagick mongodb redis \
+    && docker-php-ext-enable imagick mongodb redis \
+    && rm -rf /tmp/pear /var/lib/apt/lists/*
+
+# =============================================================================
+# Stage 2: Runtime - Imagem final otimizada
+# =============================================================================
+FROM base AS runtime
+
+# Copiar extensões compiladas do builder
+COPY --from=builder /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+
+# Instalar APENAS bibliotecas runtime necessárias (sem headers -dev)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    git \
+    libicu76 \
+    libfreetype6 \
+    libjpeg62-turbo \
+    libpng16-16 \
+    libzip5 \
+    libonig5 \
+    libpq5 \
+    libmagickwand-7.q16-10 \
     locales \
     supervisor \
     unzip \
-    zip \
-    zlib1g-dev \
     && sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
     && locale-gen \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
-
-# Configurar e instalar extensões PHP
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-    bcmath \
-    exif \
-    gd \
-    gettext \
-    intl \
-    opcache \
-    pcntl \
-    pdo_mysql \
-    pdo_pgsql \
-    zip
-
-# Instalar extensões PECL
-RUN pecl install imagick mongodb redis \
-    && docker-php-ext-enable \
-    imagick \
-    mongodb \
-    redis
+    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/* /usr/share/man/* \
+    && find /var/log -type f -delete
 
 # Criar usuário não-root
 RUN groupadd --gid ${GID} --system php \

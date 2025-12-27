@@ -1,7 +1,9 @@
 name: Build and Push Docker Images
 
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
       - main
       - master
@@ -15,10 +17,6 @@ on:
       - 'php8.4-puppeteer/**'
       - 'laravel-php8.3/**'
       - '.github/workflows/docker-publish.yml'
-  pull_request:
-    branches:
-      - main
-      - master
   workflow_dispatch:
     inputs:
       image:
@@ -46,6 +44,7 @@ jobs:
   # Detectar quais imagens mudaram
   # =============================================================================
   changes:
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     outputs:
       php84-laravel: ${{ steps.filter.outputs.php84-laravel }}
